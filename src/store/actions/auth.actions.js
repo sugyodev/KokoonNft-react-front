@@ -23,42 +23,45 @@ export const setWalletConnectionStatus = (connected) => dispatch => {
 }
 
 // Modal Actions
-export const setOpenNftCreateModal =  (isopen) => dispatch =>
-{
+export const setOpenNftCreateModal = (isopen) => dispatch => {
     dispatch({
         type: types.SET_OPEN_NFT_CREATE_MODAL,
         payload: isopen
     })
 }
 
-export const setWeb3Modal =  (modal) => dispatch =>
-{
+export const setWeb3Modal = (modal) => dispatch => {
     dispatch({
         type: types.SET_WEB3_MODAL,
         payload: modal
     })
 }
 
-export const settingUpNftCreateModal =  (modal) => dispatch =>
-{
+export const settingUpNftCreateModal = (modal) => dispatch => {
     dispatch({
         type: types.SET_SETTING_UP_NFT_MODAL,
         payload: modal
     })
 }
 
-export const setCollectionCreateModal =  (modal) => dispatch =>
-{
+export const setCollectionCreateModal = (modal) => dispatch => {
     dispatch({
         type: types.SET_CREATE_COLLECTION_MODAL,
         payload: modal
     })
 }
 
-export const setShareNftCreatedModal =  (modal) => dispatch =>
-{
+export const setShareNftCreatedModal = (modal) => dispatch => {
     dispatch({
         type: types.SET_SHARE_CREATED_NFT_MODAL,
         payload: modal
+    })
+}
+
+//auth
+export const setSendEmailStatus = (data) => dispatch => {
+    dispatch({
+        type: types.SET_SEND_EMAIL_STATUS,
+        payload: data
     })
 }

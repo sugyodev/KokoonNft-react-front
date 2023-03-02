@@ -1,13 +1,19 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from "react-redux";
 import { setOpenNftCreateModal } from "../../store/actions/auth.actions";
+import {
+  useAccount,
+  useConnect,
+  useBalance ,
+} from 'wagmi'
 
 function Dashboard() {
   const dispatch = useDispatch();
+  const { address, connector, isConnected } = useAccount()
 
   const [switchValue, setSwitchValue] = useState(1);
-  const walletConnected = useSelector((state) => state.auth.walletConnected);
   const walletInfo = useSelector((state) => state.auth.walletInfo);
+
 
   const createNft = () => {
     dispatch(setOpenNftCreateModal(true));
@@ -50,7 +56,7 @@ function Dashboard() {
 
   return (
     <>
-      {walletConnected &&
+      {isConnected ?
         <div className="dashboard py-6 px-4 lg:flex">
           <div className="w-full lg:w-2/3 sm:mx-3 h-[1300px]">
             <div className=" p-6 bg-white rounded-lg">
@@ -211,9 +217,9 @@ function Dashboard() {
               <div className='bg-[#F6F6F6] py-1 px-5 rounded-lg flex justify-between'>
                 <div className='flex'>
                   <img src='imgs/metamask-icon.png' alt='' />
-                  <p className='ml-2 #303C4F font-xs w-25 py-2'>{walletInfo?.address ? `${walletInfo.address.substr(0, 4) + '...' + walletInfo.address.substr((walletInfo.address.length - 4), 4)}` : ''}</p>
+                  <p className='ml-2 #303C4F font-xs w-25 py-2'>{address ? `${address.substr(0, 4) + '...' + address.substr((address.length - 4), 4)}` : ''}</p>
                 </div>
-                <img src='imgs/copy.png' className='h-5 w-5 mt-2' role='button' alt='' onClick={() => {navigator.clipboard.writeText(walletInfo.address)}}/>
+                <img src='imgs/copy.png' className='h-5 w-5 mt-2' role='button' alt='' onClick={() => { navigator.clipboard.writeText(address) }} />
               </div>
               <p className='mt-4 text-[#717E94]'>Current balance</p>
               <h1 className='mt-2 text-[#000549] text-2xl font-semibold'>$320,723.48</h1>
@@ -263,7 +269,12 @@ function Dashboard() {
               </div>
             </div>
           </div>
-        </div>}
+        </div>
+        :
+        <div className='h-80 w-full bg-white py-20 text-center text-3xl text-[#9aa4b5]'>
+          No wallet connected
+        </div>
+      }
     </>
   );
 }

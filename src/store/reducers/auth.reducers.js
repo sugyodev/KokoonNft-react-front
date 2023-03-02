@@ -1,9 +1,17 @@
 import * as types from "../actions/types";
+import {
+    useAccount,
+    useConnect,
+    useDisconnect,
+    useEnsAvatar,
+    useEnsName,
+} from 'wagmi'
+
 
 const auth = {
     walletInfo: {},
-    userInfo: {},
-    walletConnected: false
+    userInfo: localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo')) : {},
+    sendEmailStatus: 'signup'
 }
 
 const modal = {
@@ -24,9 +32,9 @@ export function Auth(state = auth, action) {
             return {
                 ...state, walletInfo: action.payload
             }
-        case types.SET_WALLET_CONNECTION_STATUS:
+        case types.SET_SEND_EMAIL_STATUS:
             return {
-                ...state, walletConnected: action.payload
+                ...state, sendEmailStatus: action.payload
             }
         default:
             return { ...state };

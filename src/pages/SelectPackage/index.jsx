@@ -1,12 +1,15 @@
 import '../../App.css';
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useCookies } from 'react-cookie';
 
 function SelectPackage() {
   const navigate = useNavigate();
-  const [selectedPackage, setSelectedPackage] = useState("single");
+  const [selectedPackage, setSelectedPackage] = useState(0);
+  const [cookies, setCookie] = useCookies(['user']);
+
   const Continue = () => {
-    navigate('/payment-page')
+    navigate('/payment-page', { state: { type: selectedPackage } })
   }
 
   return (
@@ -22,7 +25,9 @@ function SelectPackage() {
           </div>
 
           <div className='grid lg:grid-cols-4 md:grid-cols-2 md:grid-cols-1 lg:w-3/5 mx-auto mt-10 border-0 gap-3 text-center'>
-            <div className={`border sm:w-full mx-2 border-[#F0F2F4] h-fit rounded-lg my-1 py-6 pb-8 px-4 hover:border-[#864FD9] cursor-pointer ${selectedPackage === 'free' ? 'border-[#864FD9]' : ''}`} onClick={() => setSelectedPackage('free')}>
+            <div 
+              className={`border sm:w-full mx-2 h-fit rounded-lg my-1 py-6 pb-8 px-4 hover:border-[#864FD9] cursor-pointer ${selectedPackage === 0 ? 'border-[#864FD9]' : 'border-[#F0F2F4]'}`} 
+              onClick={() => setSelectedPackage(0)}>
               <h3 className='text-center font-bold text-[#000549]'>Single User</h3>
               <p className='text-[#6E7B91] text-center mt-4'>
                 Limited to minting
@@ -30,30 +35,30 @@ function SelectPackage() {
                 15% sales fees for the platform
                 5% resale royalty</p>
               <h1 className='text-center text-2xl font-bold text-[#000549] mt-4'>$0</h1>
-              <input type="radio" className='justify-self-center mt-4' onChange={()=>{}} checked={selectedPackage === 'free'}/>
+              <input type="radio" className='justify-self-center mt-4' onChange={()=>{}} checked={selectedPackage === 0}/>
             </div>
 
-            <div className={`border sm:w-full mx-2 border-[#F0F2F4] h-fit rounded-lg my-1 py-6 pb-8 px-4 hover:border-[#864FD9] cursor-pointer ${selectedPackage === 'small' ? 'border-[#864FD9]' : ''}`} onClick={() => setSelectedPackage('small')}>
+            <div className={`border sm:w-full mx-2 h-fit rounded-lg my-1 py-6 pb-8 px-4 hover:border-[#864FD9] cursor-pointer ${selectedPackage === 1 ? 'border-[#864FD9]' : 'border-[#F0F2F4]'}`} onClick={() => setSelectedPackage(1)}>
               <h3 className='text-center font-bold text-[#6823D0]'>Small Agency</h3>
               <p className='text-[#6E7B91] text-center mt-4'>3 Users
                 Upto 5 collections/month
                 5% sales fees for the platform
                 5% resale royalty</p>
               <h1 className='text-center text-2xl font-bold text-[#000549] mt-4'>$300<span className='text-[#000549] text-xl'>/month</span></h1>
-              <input type="radio" className='justify-self-center mt-4' onChange={()=>{}} checked={selectedPackage === 'small'}/>
+              <input type="radio" className='justify-self-center mt-4' onChange={()=>{}} checked={selectedPackage === 1}/>
             </div>
 
-            <div className={`border sm:w-full mx-2 border-[#F0F2F4] h-fit rounded-lg my-1 py-6 pb-8 px-4 hover:border-[#864FD9] cursor-pointer ${selectedPackage === 'enter' ? 'border-[#864FD9]' : ''}`} onClick={() => setSelectedPackage('enter')}>
+            <div className={`border sm:w-full mx-2 h-fit rounded-lg my-1 py-6 pb-8 px-4 hover:border-[#864FD9] cursor-pointer ${selectedPackage === 2 ? 'border-[#864FD9]' : 'border-[#F0F2F4]'}`} onClick={() => setSelectedPackage(2)}>
               <h3 className='text-center font-bold text-[#1CB23C]'>Enterprise</h3>
               <p className='text-[#6E7B91] text-center mt-4'>5 Users
                 Upto 5 collections/month
                 5% sales fees for the platform
                 3% resale royalty</p>
               <h1 className='text-center text-2xl font-bold text-[#000549] mt-4'>$1000<span className='text-[#000549] text-xl'>/month</span></h1>
-              <input type="radio" className='justify-self-center mt-4' onChange={()=>{}} checked={selectedPackage === 'enter'}/>
+              <input type="radio" className='justify-self-center mt-4' onChange={()=>{}} checked={selectedPackage === 2}/>
             </div>
 
-            <div className={`border sm:w-full mx-2 border-[#F0F2F4] h-fit rounded-lg my-1 py-6 pb-8 px-4 hover:border-[#864FD9] cursor-pointer ${selectedPackage === 'custom' ? 'border-[#864FD9]' : ''}`} onClick={() => setSelectedPackage('custom')}>
+            <div className={`border sm:w-full mx-2 h-fit rounded-lg my-1 py-6 pb-8 px-4 hover:border-[#864FD9] cursor-pointer ${selectedPackage === 3 ? 'border-[#864FD9]' : 'border-[#F0F2F4]'}`} onClick={() => setSelectedPackage(3)}>
               <h3 className='text-center font-bold text-[#FF6B57]'>Custom</h3>
               <p className='text-[#6E7B91] text-center mt-4'>5 Users
                 Upto 5 collections/month

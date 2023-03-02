@@ -4,11 +4,23 @@ import { settingUpNftCreateModal, setCollectionCreateModal, setShareNftCreatedMo
 import { CircularProgressbar } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import { useState, useEffect } from "react";
+// import { Player } from "video-react";
 
 function CreateNewNft() {
   const dispatch = useDispatch();
   const [percentage1, setPercentage1] = useState(0);
   const [percentage2, setPercentage2] = useState(0);
+  const [properties, setProperties] = useState(['name', 'value']);
+  const [nftFile, setNftFile] = useState({ type: '', data: null });
+  const [collections, setCollections] = useState([]);
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
+  const [newCollection, setNewCollection] = useState({
+    'display': '',
+    'brand': '',
+    'shorturl': '',
+    'desc': '',
+    'file': { type: '', data: null }
+  })
 
   const openSettingUpNftModal = useSelector((state) => state.modal.openSettingUpNftModal);
   const openCreateCollectionModal = useSelector((state) => state.modal.openCreateCollectionModal);
@@ -48,12 +60,83 @@ function CreateNewNft() {
     dispatch(setCollectionCreateModal(true))
   }
 
+  const inputHandler = (e) => {
+    const name = e.target.name;
+    const value = e.target.value;
+    switch (name) {
+      case 'display':
+        setNewCollection({ ...newCollection, display: value })
+        break;
+      case 'brand':
+        setNewCollection({ ...newCollection, brand: value })
+        break;
+      case 'shorturl':
+        setNewCollection({ ...newCollection, shorturl: value })
+        break;
+      case 'desc':
+        setNewCollection({ ...newCollection, desc: value })
+        break;
+      case 'file':
+        let file = e.target.files[0];
+        let reader = new FileReader();
+        let image;
+        if (file.type === 'video/mp4') {
+          let url = URL.createObjectURL(file);
+          setNewCollection({ ...newCollection, file: { ...file, type: file.type, data: url } })
+        } else {
+          reader.onloadend = function () {
+            image = reader.result;
+            setNewCollection({ ...newCollection, file: { ...file, type: file.type, data: image } })
+          };
+          reader.readAsDataURL(file);
+        }
+      default:
+        break;
+    }
+  }
+
+  const nftFileHandler = (e) => {
+    let file = e.target.files[0];
+    let reader = new FileReader();
+    let image;
+    if (file.type === 'video/mp4') {
+      let url = URL.createObjectURL(file);
+      setNftFile({ ...nftFile, type: file.type, data: url })
+    } else {
+      reader.onloadend = function () {
+        image = reader.result;
+        setNftFile({ ...nftFile, type: file.type, data: image })
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  const cancelNftFile = () => {
+    setNftFile({ nftFile: {} })
+  }
+  const cancelCollectionFile = () => {
+    setNewCollection({ ...newCollection, file: {} })
+  }
+
   const closeCreateCollectionModal = () => {
     dispatch(setCollectionCreateModal(false))
   }
   const closeShareCreatedNftModal = () => {
     dispatch(setShareNftCreatedModal(false))
   }
+
+  const addProperty = () => {
+    let newPro = 'new'
+    properties.push(newPro);
+    setProperties([...properties])
+  }
+
+  const createCollection = () => {
+    collections.push(newCollection)
+    setCollections([...collections])
+    closeCreateCollectionModal(false)
+  }
+
   return (
     <div className="payment-page">
       <div className={`${openSettingUpNftModal ? '' : 'hidden'} w-full top-0 opacity-50 h-[1800px] bg-zinc-700 absolute z-50`} onClick={() => closeSettingUpNftModal(false)}></div>
@@ -111,17 +194,17 @@ function CreateNewNft() {
               <p className='text-[#6E7B91] text-lg text-center'>Your <a className='text-[#6823d0] font-bold' href='#'>Abstarct Hand </a>NFT is successfully created. It will be mited in blockchain while purchaing or transferrring</p>
             </div>
             <div className='sm:px-8 px-2 grid grid-cols-4 my-6'>
-              <img src="/imgs/share-facebook-icon.png" role='button'/>
-              <img src="/imgs/share-twitter-icon.png" role='button'/>
-              <img src="/imgs/share-telegram-icon.png" role='button'/>
-              <img src="/imgs/share-clipboard-icon.png" role='button' onClick={() => {navigator.clipboard.writeText('created-nft-link')}}/>
+              <img src="/imgs/share-facebook-icon.png" role='button' />
+              <img src="/imgs/share-twitter-icon.png" role='button' />
+              <img src="/imgs/share-telegram-icon.png" role='button' />
+              <img src="/imgs/share-clipboard-icon.png" role='button' onClick={() => { navigator.clipboard.writeText('created-nft-link') }} />
             </div>
             <button className='bg-[#F0F2F4] rounded-lg py-3 px-4 w-full text-[#303C4F] mx-auto mt-6'>View NFT</button>
           </div>
         </div>
       </div>
 
-      <div id="create-collection-modal" tabIndex="-1" aria-hidden="true" className={`${openCreateCollectionModal ? '' : 'hidden'} mx-auto fixed mt-1 sm:mt-2 z-50 w-full md:w-[600px] m-8 h-fit md:inset-0 md:h-fit`}>
+      <div id="create-collection-modal" tabIndex="-1" aria-hidden="true" className={`${openCreateCollectionModal ? '' : 'hidden'} mx-auto fixed mt-4 sm:mt-12 z-50 w-full md:w-[600px] m-8 h-fit md:inset-0 md:h-fit`}>
         <div className="relative w-full h-full md:h-auto p-4">
           <div className="relative bg-white rounded-lg shadow dark:bg-gray-700 sm:px-10 p-4 w-full text-center">
             <div className="px-6 py-4 rounded-t dark:border-gray-600">
@@ -131,25 +214,40 @@ function CreateNewNft() {
             </div>
             <p className='text-[#303C4F] mt-8 font-bold text-left'>Load image</p>
             <p className='text-[#6E7B91] my-1 text-left'>Recommended minimum size 350 x 350 px.</p>
-            <div className="flex items-center justify-center w-full">
-              <label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600">
-                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <svg aria-hidden="true" className="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                  <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">Choose File</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">PNG, GIF, WEBP, MP4 or MP3. Max 100mb.</p>
-                </div>
-                <input id="dropzone-file" type="file" className="hidden" />
-              </label>
-            </div>
+            {newCollection.file.data ?
+              <div className='relative border rounded m-2'>
+                <button className='border rounded-full h-8 w-8 z-10 absolute top-1 right-1' onClick={cancelCollectionFile}><i className='fa fa-close mb-[1px]'></i></button>
+                {
+                  newCollection.file.type === 'video/mp4' ?
+                    <video className='w-full h-auto' controls>
+                      <source src={newCollection.file.data} type="video/mp4" />
+                    </video>
+                    :
+                    <img src={newCollection.file.data} className='w-full h-auto' />
+                }
+              </div>
+              :
+              <div className="flex items-center justify-center w-full">
+                <label htmlFor="dropzone-file2" className="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600">
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <svg aria-hidden="true" className="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                    <p className="mb-2 text-sm text-gray-500 dark:text-gray-400"><span className="font-semibold">Click to upload</span> or drag and drop</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">SVG, PNG, JPG or GIF (MAX. 800x400px)</p>
+                  </div>
+                  <input id="dropzone-file2" type="file" className="hidden" onChange={(e) => inputHandler(e)} name='file' />
+                </label>
+              </div>
+            }
+
             <p className='text-[#303C4F] sm:mt-4 mt-2 font-bold my-1 text-left'>Display Name</p>
-            <input className='rounded-lg w-full focus:border-[#864FD9] border border-[#D3D8DE] px-4 py-1 sm:py-3 text-[#6E7B91] focus:shadow-md shadow-indigo-500/40 focus:outline-none' placeholder='Collection name' />
+            <input onChange={inputHandler} name='display' value={newCollection.display} className='rounded-lg w-full focus:border-[#864FD9] border border-[#D3D8DE] px-4 py-1 sm:py-3 text-[#6E7B91] focus:shadow-md shadow-indigo-500/40 focus:outline-none' placeholder='Collection name' />
             <p className='text-[#303C4F] sm:mt-4 mt-2 font-bold my-1 text-left'>Brand name</p>
-            <input className='rounded-lg w-full focus:border-[#864FD9] border border-[#D3D8DE] px-4 py-1 sm:py-3 text-[#6E7B91] focus:shadow-md shadow-indigo-500/40 focus:outline-none' placeholder='Brand name' />
+            <input onChange={inputHandler} name='brand' value={newCollection.brand} className='rounded-lg w-full focus:border-[#864FD9] border border-[#D3D8DE] px-4 py-1 sm:py-3 text-[#6E7B91] focus:shadow-md shadow-indigo-500/40 focus:outline-none' placeholder='Brand name' />
             <p className='text-[#303C4F] sm:mt-4 mt-2 font-bold my-1 text-left'>Description</p>
-            <textarea className='rounded-lg w-full focus:border-[#864FD9] h-28 border border-[#D3D8DE] px-4 py-1 sm:py-3 text-[#6E7B91] focus:shadow-md shadow-indigo-500/40 focus:outline-none' placeholder='Collection name' />
+            <textarea onChange={inputHandler} name='desc' value={newCollection.desc} className='rounded-lg w-full focus:border-[#864FD9] h-28 border border-[#D3D8DE] px-4 py-1 sm:py-3 text-[#6E7B91] focus:shadow-md shadow-indigo-500/40 focus:outline-none' placeholder='Collection name' />
             <p className='text-[#303C4F] sm:mt-4 mt-2 font-bold mt-8 text-left'>Short URL</p>
-            <input className='rounded-lg w-full focus:border-[#864FD9] border border-[#D3D8DE] px-4 py-1 sm:py-3 text-[#6E7B91] focus:shadow-md shadow-indigo-500/40 focus:outline-none' placeholder='koccon.com/ ' />
-            <button className='bg-[#6823D0] rounded-lg py-1 sm:py-3 px-4 w-full text-white mx-auto mt-4'>Create Colletion</button>
+            <input onChange={inputHandler} name='shorturl' value={newCollection.shorturl} className='rounded-lg w-full focus:border-[#864FD9] border border-[#D3D8DE] px-4 py-1 sm:py-3 text-[#6E7B91] focus:shadow-md shadow-indigo-500/40 focus:outline-none' placeholder='koccon.com/ ' />
+            <button className='bg-[#6823D0] rounded-lg py-1 sm:py-3 px-4 w-full text-white mx-auto mt-4' onClick={createCollection}>Create Colletion</button>
           </div>
         </div>
       </div>
@@ -176,18 +274,31 @@ function CreateNewNft() {
             </div>
             <button className='rounded-full border-0 bg-[#1CB23C] px-3 py-1 text-white text-xs'>Connected</button>
           </div>
-
           <p className='text-[#303C4F] mt-8 font-bold'>Upload file</p>
-          <div className="flex items-center justify-center w-full">
-            <label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600">
-              <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                <svg aria-hidden="true" className="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                <p className="mb-2 text-sm text-gray-500 dark:text-gray-400"><span className="font-semibold">Click to upload</span> or drag and drop</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">SVG, PNG, JPG or GIF (MAX. 800x400px)</p>
-              </div>
-              <input id="dropzone-file" type="file" className="hidden" />
-            </label>
-          </div>
+          {nftFile.data ?
+            <div className='relative border rounded m-2'>
+              <button className='border rounded-full h-8 w-8 z-10 absolute top-1 right-1' onClick={cancelNftFile}><i className='fa fa-close mb-[1px]'></i></button>
+              {
+                nftFile.type === 'video/mp4' ?
+                  <video className='w-full h-auto' controls>
+                    <source src={nftFile.data} type="video/mp4" />
+                  </video>
+                  :
+                  <img src={nftFile.data} className='w-full h-auto' />
+              }
+            </div>
+            :
+            <div className="flex items-center justify-center w-full">
+              <label htmlFor="dropzone-file1" className="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600">
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  <svg aria-hidden="true" className="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                  <p className="mb-2 text-sm text-gray-500 dark:text-gray-400"><span className="font-semibold">Click to upload</span> or drag and drop</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">SVG, PNG, JPG or GIF (MAX. 800x400px)</p>
+                </div>
+                <input id="dropzone-file1" type="file" className="hidden" onChange={nftFileHandler} name='nftfile' />
+              </label>
+            </div>
+          }
 
           <p className='text-[#303C4F] mt-8 font-bold'>Choose collection</p>
           <div className='flex'>
@@ -198,9 +309,25 @@ function CreateNewNft() {
             </div>
             <div className='w-1/2 m-2 rounded-lg border h-36 cursor-pointer hover:border-[#6823d0] p-4 text-center bg-whtie'>
               <img src='/imgs/logo-icon.png' className='w-8 mx-auto' alt='B' />
-              <p className='text-[#000549] text-sm my-3 font-bold'>Kocoon</p>
-              <p className='text-[#6E7B91] text-sm my-3'>KCN</p>
+              <p className='text-[#000549] text-sm my-3 font-bold'>Kocoon1</p>
+              <p className='text-[#6E7B91] text-sm my-3'>KCN1</p>
             </div>
+            <div className='w-1/2 m-2 rounded-lg border h-36 cursor-pointer hover:border-[#6823d0] p-4 text-center bg-whtie'>
+              <img src='/imgs/logo-icon.png' className='w-8 mx-auto' alt='B' />
+              <p className='text-[#000549] text-sm my-3 font-bold'>Kocoon2</p>
+              <p className='text-[#6E7B91] text-sm my-3'>KCN2</p>
+            </div>
+          </div>
+          <div className='grid grid-cols-3'>
+            {collections.map((val, ind) => {
+              return (
+                <div className='m-2 rounded-lg border h-36 cursor-pointer hover:border-[#6823d0] p-4 text-center bg-whtie' key={ind}>
+                  <img src='/imgs/logo-icon.png' className='w-8 mx-auto' alt='B' />
+                  <p className='text-[#000549] text-sm my-3 font-bold'>{val.display}</p>
+                  <p className='text-[#6E7B91] text-sm my-3'>{val.brand}</p>
+                </div>
+              )
+            })}
           </div>
 
           <div className='flex justify-between mt-6'>
@@ -228,25 +355,30 @@ function CreateNewNft() {
           <p className='text-[#303C4F] mt-4 font-bold my-1'>Loyalty</p>
           <input className='rounded-lg w-full focus:border-[#864FD9] border border-[#D3D8DE] px-4 py-3 text-[#6E7B91] focus:shadow-md shadow-indigo-500/40 focus:outline-none' placeholder='10%' />
 
-          <button className='text-[#303C4F] rounded-lg bg-[#F0F2F4] px-4 py-3 w-full mt-8'>Show Advance Settings</button>
-          <div className='flex mt-4'>
-            <input className='rounded-lg w-1/2 mx-1 focus:border-[#864FD9] border border-[#D3D8DE] px-4 py-3 text-[#6E7B91] focus:shadow-md shadow-indigo-500/40 focus:outline-none' placeholder='e.g. Size' />
-            <input className='rounded-lg w-1/2 mx-1 focus:border-[#864FD9] border border-[#D3D8DE] px-4 py-3 text-[#6E7B91] focus:shadow-md shadow-indigo-500/40 focus:outline-none' placeholder='e.g. M' />
-          </div>
+          <button className='text-[#303C4F] rounded-lg bg-[#F0F2F4] px-4 py-3 w-full mt-8' onClick={() => { setShowAdvancedSettings(!showAdvancedSettings) }}>Show Advance Settings</button>
+          {showAdvancedSettings && <>
+            <div className='mt-4 grid grid-cols-2'>
+              {properties.map((val, ind) => {
+                return (
+                  <input className='rounded-lg col-span-1 m-1 focus:border-[#864FD9] border border-[#D3D8DE] px-4 py-3 text-[#6E7B91] focus:shadow-md shadow-indigo-500/40 focus:outline-none' key={ind} placeholder={val} />
+                )
+              })}
+              {/* <input className='rounded-lg w-1/2 mx-1 focus:border-[#864FD9] border border-[#D3D8DE] px-4 py-3 text-[#6E7B91] focus:shadow-md shadow-indigo-500/40 focus:outline-none' placeholder='e.g. M' /> */}
+            </div>
 
-          <button className='flex w-44 mt-4'>
-            <i className='fa fa-plus text-[#6823D0] py-1'></i>
-            <span className='text-[#6823D0] ml-2 font-semibold max-w-max'>Add more properties</span>
-          </button>
+            <button className='flex w-44 mt-4'>
+              <i className='fa fa-plus text-[#6823D0] py-1'></i>
+              <span className='text-[#6823D0] ml-2 font-semibold max-w-max cursor-pointer' onClick={addProperty}>Add more properties</span>
+            </button>
 
-          <p className='text-[#303C4F] mt-4 font-bold my-1'>Alternative text for NFT</p>
-          <input className='rounded-lg w-full focus:border-[#864FD9] border border-[#D3D8DE] px-4 py-3 text-[#6E7B91] focus:shadow-md shadow-indigo-500/40 focus:outline-none' placeholder='image description in details' />
-          <p className='text-[#6E7B91] text-sm my-3'>Text that will be used in VoiceOver for people with disabilities.</p>
-
+            <p className='text-[#303C4F] mt-4 font-bold my-1'>Alternative text for NFT</p>
+            <input className='rounded-lg w-full focus:border-[#864FD9] border border-[#D3D8DE] px-4 py-3 text-[#6E7B91] focus:shadow-md shadow-indigo-500/40 focus:outline-none' placeholder='image description in details' />
+            <p className='text-[#6E7B91] text-sm my-3'>Text that will be used in VoiceOver for people with disabilities.</p></>
+          }
           <button className='text-white bg-[#6823D0] rounded-lg px-4 py-3 w-full mt-4' onClick={showSettingUpNftModal}>Create Item</button>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
 

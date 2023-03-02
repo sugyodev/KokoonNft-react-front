@@ -1,41 +1,16 @@
 import '../../App.css';
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
 
 function PaymentPage() {
   const navigate = useNavigate();
+  const { state } = useLocation();
+  const { type } = state;
   const [selectedPlan, setSelectedPlan] = useState("monthly");
-  const stripe = useStripe();
-  const elements = useElements();
 
   const payNow = async (event) => {
-    navigate('/payment-success')
-    event.preventDefault();
-
-    if (!stripe || !elements) {
-      // Stripe.js has not yet loaded.
-      // Make sure to disable form submission until Stripe.js has loaded.
-      return;
-    }
-
-    const result = await stripe.confirmPayment({
-      //`Elements` instance that was used to create the Payment Element
-      elements,
-      confirmParams: {
-        return_url: "https://localhost:3000/payment-success",
-      },
-    });
-
-
-    if (result.error) {
-      // Show error to your customer (for example, payment details incomplete)
-      console.log(result.error.message);
-    } else {
-      // Your customer will be redirected to your `return_url`. For some payment
-      // methods like iDEAL, your customer will be redirected to an intermediate
-      // site first to authorize the payment, then redirected to the `return_url`.
-    }
+    navigate("/payment-success");
   }
 
   const back = () => {
@@ -43,7 +18,7 @@ function PaymentPage() {
   }
 
   return (
-    <div className="payment-page">
+    <div className="payment-page h-screen">
       <div className='py-5 px-32 w-full h-18 border-b'>
         <img src='imgs/logo.png' alt="A" />
       </div>
@@ -143,11 +118,9 @@ function PaymentPage() {
             <span className='text-[#303C4F] text-lg'>Billed Now:</span>
             <h1 className='text-xl font-bold text-[#000549]'>$300.00 USD</h1>
           </div>
-          <form onSubmit={payNow}>
-            {/* {Pyament Element is must require secret key} */}
-            {/* <PaymentElement />   */}
-            <button className='bg-[#6823D0] text-center px-4 py-3 text-white rounded-lg w-32 float-right mt-6' disabled={!stripe}>Pay now</button>
-          </form>
+          {/* {Pyament Element is must require secret key} */}
+          {/* <PaymentElement />   */}
+          <button className='bg-[#6823D0] text-center px-4 py-3 text-white rounded-lg w-32 float-right mt-6' /*disabled={!stripe}*/ onClick={() => payNow()}>Pay now</button>
         </div>
         <div></div>
       </div>

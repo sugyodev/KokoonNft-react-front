@@ -1,9 +1,9 @@
 import axios from "axios";
-import { logout, useAuthDispatch, useAuthState } from "../context/authContext";
+//import { logout, useAuthDispatch, useAuthState } from "../context/authContext";
 
 export function useAxios() {
   //const { token } = useAuthState();
-  const dispatch = useAuthDispatch();
+  //const dispatch = useAuthDispatch();
   axios.defaults.baseURL = process.env.REACT_APP_API_URL;
   //axios.defaults.headers.common['Authorization'] = AUTH_TOKEN;
   axios.defaults.headers.post["Content-Type"] =
@@ -25,9 +25,9 @@ export function useAxios() {
     (error) => {
       const { status } = error.response;
 
-      if (status === 401) {
-        logout(dispatch);
-      }
+      // if (status === 401) {
+      //   logout(dispatch);
+      // }
 
       return Promise.reject(error);
     }
