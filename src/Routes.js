@@ -11,14 +11,16 @@ import SelectPackage from './pages/SelectPackage';
 import ChooseChain from './pages/ChooseChain';
 import CreateNewNft from './pages/CreateNewNft';
 import PaymentPage from './pages/PaymentPage';
-import PaymentSuccess from './pages/PaymentSuccess';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import SendEmail from './pages/SendEmail';
 import { ToastContainer } from 'react-toastify';
+import { loadStripe } from "@stripe/stripe-js";
+import axios from 'axios';
+import { Elements } from '@stripe/react-stripe-js';
 
 const Routers = () => {
-
+  const stripePromise = axios.get('/api/stripe_pubkey').then((res) => loadStripe(res.data.pubKey));
   return (
     <>
       <BrowserRouter>
@@ -33,10 +35,9 @@ const Routers = () => {
             <Route path="/confirm_email" element={<ConfirmEmail />} />
             <Route path="/joinin" element={<JoinIn />} />
             <Route path="/select-package" element={<SelectPackage />} />
-            <Route path="/payment-page" element={<PaymentPage />} />
-            <Route path="/choose-chain" element={<ChooseChain />} />
-            <Route path="/create-new-nft/:name" element={<CreateNewNft />} />
-            <Route path="/payment-success" element={<PaymentSuccess />} />
+            <Route path="/payment-page/:packageId" element={<Elements stripe={stripePromise}><PaymentPage/></Elements>} />
+            <Route path="/choose-chain/:nfttype" element={<ChooseChain />} />
+            <Route path="/create/:name/:nfttype" element={<CreateNewNft />} />
             <Route path="/sendemail" element={<SendEmail />} />
             <Route path="/resetpwd" element={<ResetPassword />} />
             <Route path="/forgotpwd" element={<ForgotPassword />} />

@@ -1,6 +1,6 @@
 import '../../App.css';
 import { useNavigate } from "react-router-dom";
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   LoginSocialGoogle,
   LoginSocialFacebook,
@@ -9,7 +9,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import formValidation from '../../utils/formValidation';
 import { useDispatch, useSelector } from "react-redux";
-import { updateUserInfo } from '../../store/actions/auth.actions';
+import { setSendEmailStatus, updateUserInfo } from '../../store/actions/auth.actions';
 import { setLocalStorageByUserinfo, removeLocalstrage } from '../../utils'
 
 function SignIn() {
@@ -24,12 +24,14 @@ function SignIn() {
   const [formValid, setFormValid] = useState({ 'email': false, 'password': false })
   const [isLoginSuccess, setIsLoginSuccess] = useState(true);
 
-  const userInfo = useSelector((state) => state.auth.userInfo);
-
   const goSignUp = () => {
     navigate('/signup')
   }
 
+  /**
+   * Email & password input handler
+   * @param {*} e 
+   */
   const handleUserInput = (e) => {
     const name = e.target.name;
     const value = e.target.value;
@@ -47,16 +49,10 @@ function SignIn() {
     }
   }
 
-  useEffect(() => {
-    if (localStorage.getItem('loginStatus') === 'true' && (Number.parseInt(localStorage.getItem('expiration')) > new Date().getTime())) {
-      console.log(userInfo, "userInfo")
-      navigate('/dashboard');
-    } else {
-      removeLocalstrage()
-    }
-  });
 
-
+  /**
+   * Sign in with email, pwd 
+   */
   const signIn = () => {
     if (email.length === 0 || password.length === 0) {
       toast.warn("Email and Password is required.");
@@ -70,19 +66,31 @@ function SignIn() {
         axios.post("/api/user/signin", paramData)
           .then((res) => {
             if (res.data.status) {
-              setLocalStorageByUserinfo(paramData)
+              setLocalStorageByUserinfo({
+                email: email,
+                pwd: password,
+                loginType: 1,
+                id: res.data.user.id
+              })
               const user = res.data.user;
+              dispatch(updateUserInfo({ ...user }));
               setIsLoginSuccess(true)
-              // if (!user.isApproved) navigate("/select-package");
-              // if (!user.isConfirmed) navigate("/sendemail");
-              // else {
+              if (!user.isConfirmed) {
+                dispatch(setSendEmailStatus('signin'));
+                navigate(`/sendemail`, { state: { email: email } });
+                return;
+              }
+              if (!user.isApproved) {
+                navigate("/select-package");
+                return;
+              }
+              if (user.isConfirmed && user.isApproved) {
                 toast.success("Login success.");
                 navigate('/dashboard')
-                dispatch(updateUserInfo({ ...user }));
-              // }
+              }
             } else {
               setIsLoginSuccess(false)
-              toast.error(res.data.message);
+              //toast.error(res.data.message);
             }
           }).catch((e) => {
             console.log(e);
@@ -100,12 +108,18 @@ function SignIn() {
     }
   }
 
+  /**
+   * Third party login start event handler
+   */
   const onLoginStart = useCallback(() => {
     console.log("login start");
     // navigate('/signin')
     // window.open('https://kocoon.app')
   }, []);
 
+  /**
+   * Third party login success event handler
+   */
   const onLoginSuccess = useCallback((provider, data) => {
     setProvider(provider);
     //   {
@@ -135,11 +149,13 @@ function SignIn() {
         if (res.data.status) {
           const user = res.data.user;
           toast.success("Login success.");
+          setLocalStorageByUserinfo({
+            loginType: user.loginType,
+            id: res.data.user.id
+          })
+          dispatch(updateUserInfo({ ...user }));
           if (!user.isApproved) navigate("/select-package");
-          else {
-            navigate("/dashboard");
-            dispatch(updateUserInfo({ ...user }));
-          }
+          else navigate("/dashboard");
         } else {
           toast.error(res.data.message);
         }
@@ -150,10 +166,17 @@ function SignIn() {
       })
   }, [])
 
+  /**
+   * Third party login failure event handler
+   */
   const onLogoutFailure = useCallback(() => {
     console.log("logout fail");
   }, []);
 
+
+  /**
+   * Third party logout success event handler
+   */
   const onLogoutSuccess = useCallback(() => {
     setProfile(null);
     setProvider("");
@@ -164,6 +187,9 @@ function SignIn() {
     return window.location.protocol + "//" + window.location.host + "/signin"
   }
 
+  /**
+   * Login with discord
+   */
   const loginWithDiscrod = () => {
     window.open(
       `https://discord.com/api/oauth2/authorize?` +
@@ -186,6 +212,10 @@ function SignIn() {
     }
   }, [window.location])
 
+
+  /**
+   * Get userinfo using third party login
+   */
   const getUserDetails = useCallback(async (accessToken, tokenType) => {
     try {
       const response = await axios.get("https://discord.com/api/users/@me", {
@@ -222,6 +252,11 @@ function SignIn() {
       axios.post("/api/user/signup", paramData)
         .then((res) => {
           const user = res.data.user;
+          setLocalStorageByUserinfo({
+            loginType: user.loginType,
+            id: res.data.user.id
+          })
+          dispatch(updateUserInfo({ ...user }));
           if (!user.isApproved) navigate("/select-package");
           else navigate("/dashboard");
         }).catch((e) => {
@@ -236,11 +271,11 @@ function SignIn() {
   return (
     <div className="signin h-screen">
       <div className='py-5 px-32 w-full h-18 border-b'>
-        <img src='imgs/logo.png' alt="A" />
+        <img src='/imgs/logo.png' alt="A" />
       </div>
       <div className='w-[370px] m-auto mt-32'>
         <h1 className='w-full text-center font-bold text-2xl text-[#000549]'>Welcome Back</h1>
-        <p className='my-2 text-center text-[#303C4F]'>Enter your credentials to access your account</p>
+        <p className='my-2 text-center text-[#303C4F] tracking-normal font-[500]'>Enter your credentials to access your account</p>
 
         <div className='flex my-6'>
           <LoginSocialGoogle
@@ -258,7 +293,7 @@ function SignIn() {
             scope={"https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile"}
           >
             <button className='bg-[#F6F6F6] rounded-lg h-12 text-center px-4 py-3 w-28 mx-1'>
-              <img src='imgs/google-icon.png' className='mx-auto' width={20} alt="A" />
+              <img src='/imgs/google-icon.png' className='mx-auto' width={20} alt="A" />
             </button>
           </LoginSocialGoogle>
 
@@ -275,12 +310,12 @@ function SignIn() {
             }}
           >
             <button className='bg-[#F6F6F6] rounded-lg h-12 text-center px-4 py-3 w-28 mx-1'>
-              <img src='imgs/facebook-icon.png' className='mx-auto' width={20} alt="A" />
+              <img src='/imgs/facebook-icon.png' className='mx-auto' width={20} alt="A" />
             </button>
           </LoginSocialFacebook>
 
           <button className='bg-[#F6F6F6] rounded-lg h-12 text-center px-4 py-3 w-28 mx-1' onClick={loginWithDiscrod}>
-            <img src='imgs/discord-icon.png' className='mx-auto' width={20} alt="A" />
+            <img src='/imgs/discord-icon.png' className='mx-auto' width={20} alt="A" />
           </button>
         </div>
 
@@ -291,32 +326,32 @@ function SignIn() {
         </div>
 
         <div className='mt-10'>
-          <p className='text-[#303C4F] my-2 px-1 font-bold'>Email address</p>
-          <input className={`rounded-lg w-full focus:border-[#864FD9] border px-4 py-3 text-[#6E7B91] focus:shadow-md shadow-indigo-500/40 focus:outline-none ${isLoginSuccess ? 'border-[#D3D8DE]' : 'border-[#FF6B57]'}`} onChange={handleUserInput} name='email' value={email} placeholder='rafiqur51@company.com |' />
+          <p className='text-[#303C4F] my-2 px-1 font-semibold'>Email address</p>
+          <input className={`rounded-lg w-full focus:border-[#864FD9] font-[500] border px-4 py-3 text-[#6E7B91] focus:shadow-md shadow-indigo-500/40 focus:outline-none ${isLoginSuccess ? 'border-[#D3D8DE]' : 'border-[#FF6B57]'}`} onChange={handleUserInput} name='email' value={email} placeholder='rafiqur51@company.com |' />
           {!isLoginSuccess &&
-            <p className='text-[#FF6B57] my-2 px-1 font-bold'>This email isn’t registered or not found.</p>
+            <p className='text-[#FF6B57] my-2 px-1 font-[500]'>This email isn’t registered or not found.</p>
           }
           <div className='flex justify-between mt-6 mb-2'>
-            <span className='text-[#303C4F] px-1 float-left font-bold'>Password</span>
-            <span className='text-[#864FD9] cursor-pointer px-1 float-right font-bold' onClick={() => navigate('/forgotpwd')}>Forgot Password?</span>
+            <span className='text-[#303C4F] px-1 float-left font-semibold'>Password</span>
+            <span className='text-[#6823D0] cursor-pointer px-1 float-right font-[500]' onClick={() => navigate('/forgotpwd')}>Forgot Password?</span>
           </div>
 
           <div>
-            <input className={`rounded-lg w-full focus:border-[#864FD9] border px-4 py-3 text-[#6E7B91] focus:shadow-md shadow-indigo-500/40 focus:outline-none ${isLoginSuccess ? 'border-[#D3D8DE]' : 'border-[#FF6B57]'}`} onChange={handleUserInput} name='password' value={password} placeholder='password' type={`${showPassowrd ? 'password' : 'text'}`} />
+            <input className={`rounded-lg w-full focus:border-[#864FD9] border font-[500] px-4 py-3 text-[#6E7B91] focus:shadow-md shadow-indigo-500/40 focus:outline-none ${isLoginSuccess ? 'border-[#D3D8DE]' : 'border-[#FF6B57]'}`} onChange={handleUserInput} name='password' value={password} placeholder='password' type={`${showPassowrd ? 'password' : 'text'}`} />
             <i className={`fa absolute -ml-6 mt-4 text-[#303C4F] cursor-pointer z-10 ${showPassowrd ? 'fa-eye' : 'fa-eye-slash'}`} onClick={() => setShowPassword(!showPassowrd)}></i>
           </div>
           {!isLoginSuccess &&
-            <p className='text-[#FF6B57] my-2 px-1 font-bold'>Incorrect password</p>
+            <p className='text-[#FF6B57] my-2 px-1 font-[500]'>Incorrect password</p>
           }
 
           <button
-            className='bg-[#6823D0] text-center px-4 py-3 text-white rounded-lg w-full mt-6'
+            className='bg-[#6823D0] text-center px-4 py-3 text-white font-[500] rounded-lg w-full mt-6'
             onClick={() => signIn()}
           >Login</button>
 
           <div className='text-center justify-center mt-2'>
-            <span className='text-[#6E7B91] font-bold'>Need an account?</span>
-            <span className='text-[#864FD9] ml-2 cursor-pointer font-bold' onClick={() => goSignUp()}>Create account</span>
+            <span className='text-[#303C4F] font-[500]'>Need an account?</span>
+            <span className='text-[#6823D0] ml-2 cursor-pointer font-[500]' onClick={() => goSignUp()}>Create account</span>
           </div>
 
         </div>

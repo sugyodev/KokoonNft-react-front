@@ -1,28 +1,25 @@
 import '../../App.css';
 import { useNavigate } from "react-router-dom";
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   LoginSocialGoogle,
   LoginSocialFacebook,
 } from "reactjs-social-login";
 import axios from 'axios';
-import { useCookies } from 'react-cookie';
 import formValidation from '../../utils/formValidation';
 import { toast } from 'react-toastify';
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { setSendEmailStatus, updateUserInfo } from '../../store/actions/auth.actions';
+import { setLocalStorageByUserinfo } from '../../utils';
 
 function SignUp() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
+  const [showPassowrd, setShowPassword] = useState(true)
   const [provider, setProvider] = useState("");
   const [profile, setProfile] = useState();
   const [formData, setFormData] = useState({ email: '', password: '', username: '', terms: false })
   const [formValid, setFormValid] = useState({ 'email': false, 'password': false })
-
-  const [isAgreed, setAgreed] = useState(false);
-  const [cookies, setCookie] = useCookies(['user']);
 
   const goSignIn = () => {
     navigate('/signin')
@@ -57,7 +54,6 @@ function SignUp() {
   }, [formData.email]);
 
   const signUp = () => {
-
     if (formData.email === '' || formData.password === '' || formData.username === '') {
       toast.warn("You must fill out all the fields.");
     } else {
@@ -72,13 +68,9 @@ function SignUp() {
           .then((res) => {
             if (res.data.status) {
               toast.success("Verify your email.");
-              setCookie('Email', formData.email, { path: '/signin' });
-              setCookie('Password', formData.password, { path: '/signin' });
-              setCookie('LoginType', 1, { path: '/signin' });
-              //go to page for email sent
               dispatch(updateUserInfo({ ...res.data.user }));
               dispatch(setSendEmailStatus('signup'));
-              navigate("/sendemail");
+              navigate(`/sendemail`, { state : { email : formData.email}});
             }else toast.error(res.data.message);
           }).catch((e) => {
             console.log(e);
@@ -97,7 +89,6 @@ function SignUp() {
       }
     }
   }
-  const [showPassowrd, setShowPassword] = useState(true)
 
   const onLoginStart = useCallback(() => {
     console.log("login start");
@@ -132,14 +123,15 @@ function SignUp() {
     axios.post("/api/user/signup", paramData)
       .then((res) => {
         if (res.data.status){
-          setCookie('Email', data.email, { path: '/signin' });
-          setCookie('LoginType', 2, { path: '/signin' });
           const user = res.data.user;
+          toast.success("Login success.");
+          setLocalStorageByUserinfo({
+            loginType: 2,
+            id: res.data.user.id
+          })
+          dispatch(updateUserInfo({ ...user }));
           if (!user.isApproved) navigate("/select-package");
-          else {
-            dispatch(updateUserInfo({ ...user }));
-            navigate("/dashboard")
-          }
+          else navigate("/dashboard")
         }else{
           toast.error(res.data.message);
         }
@@ -221,9 +213,12 @@ function SignUp() {
       axios.post("/api/user/signup", paramData)
         .then((res) => {
           if (res.data.status){
-            setCookie('Email', response.data.email, { path: '/signin' });
-            setCookie('LoginType', 4, { path: '/signin' });
             const user = res.data.user;
+            setLocalStorageByUserinfo({
+              loginType: 4,
+              id: res.data.user.id
+            })
+            dispatch(updateUserInfo({ ...user }));
             if (!user.isApproved) navigate("/select-package");
             else navigate("/dashboard");
           }else{
@@ -242,11 +237,11 @@ function SignUp() {
   return (
     <div className="signup h-screen">
       <div className='py-5 px-32 w-full h-18 border-b'>
-        <img src='imgs/logo.png' alt="A" />
+        <img src='/imgs/logo.png' alt="A" />
       </div>
       <div className='w-[370px] m-auto mt-20'>
         <h1 className='w-full text-center font-bold text-2xl text-[#000549]'>Join Kocoon</h1>
-        <p className='my-2 text-center text-[#303C4F]'>Get started with Koccon by creating your profile</p>
+        <p className='my-2 text-center text-[#303C4F] font-[500]'>Get started with Koccon by creating your profile</p>
         <div className='flex my-6'>
           <LoginSocialGoogle
             client_id={process.env.REACT_APP_GOOGLE_CLIENT_ID}
@@ -263,7 +258,7 @@ function SignUp() {
             scope={"https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile"}
           >
             <button className='bg-[#F6F6F6] rounded-lg h-12 text-center px-4 py-3 w-28 mx-1'>
-              <img src='imgs/google-icon.png' className='mx-auto' width={20} alt="A" />
+              <img src='/imgs/google-icon.png' className='mx-auto' width={20} alt="A" />
             </button>
           </LoginSocialGoogle>
 
@@ -281,12 +276,12 @@ function SignUp() {
             }}
           >
             <button className='bg-[#F6F6F6] rounded-lg h-12 text-center px-4 py-3 w-28 mx-1'>
-              <img src='imgs/facebook-icon.png' className='mx-auto' width={20} alt="A" />
+              <img src='/imgs/facebook-icon.png' className='mx-auto' width={20} alt="A" />
             </button>
           </LoginSocialFacebook>
 
           <button className='bg-[#F6F6F6] rounded-lg h-12 text-center px-4 py-3 w-28 mx-1' onClick={loginWithDiscrod}>
-            <img src='imgs/discord-icon.png' className='mx-auto' width={20} alt="A" />
+            <img src='/imgs/discord-icon.png' className='mx-auto' width={20} alt="A" />
           </button>
         </div>
 
@@ -297,9 +292,9 @@ function SignUp() {
         </div>
         <div className='mt-10'>
 
-          <p className='text-[#303C4F] my-2 px-1 font-bold'>User Name</p>
+          <p className='text-[#303C4F] my-2 px-1 font-semibold'>User Name</p>
           <input
-            className='rounded-lg w-full focus:border-[#864FD9] border-[#D3D8DE] border px-4 py-3 text-[#6E7B91] focus:shadow-md shadow-indigo-500/40 focus:outline-none'
+            className='rounded-lg w-full font-[500] focus:border-[#864FD9] border-[#D3D8DE] border px-4 py-3 text-[#6E7B91] focus:shadow-md shadow-indigo-500/40 focus:outline-none'
             placeholder='rafiqur'
             type='text'
             name='username'
@@ -307,23 +302,23 @@ function SignUp() {
             value={formData.username}
           />
 
-          <p className='text-[#303C4F]  my-2 px-1 font-bold'>Email Address</p>
-          <input className='rounded-lg w-full focus:border-[#864FD9] border-[#D3D8DE] border px-4 py-3 text-[#6E7B91] focus:shadow-md shadow-indigo-500/40 focus:outline-none' onChange={handleUserInput} name='email' value={formData.email} placeholder='rafiqur51@company.com' />
+          <p className='text-[#303C4F] my-2 px-1 font-semibold'>Email Address</p>
+          <input className='rounded-lg font-[500] w-full focus:border-[#864FD9] border-[#D3D8DE] border px-4 py-3 text-[#6E7B91] focus:shadow-md shadow-indigo-500/40 focus:outline-none' onChange={handleUserInput} name='email' value={formData.email} placeholder='rafiqur51@company.com' />
 
-          <span className='text-[#303C4F]  px-1 float-left mt-3 font-bold'>Password</span>
+          <span className='text-[#303C4F]  px-1 float-left mt-3 font-semibold'>Password</span>
           <div>
-            <input className='rounded-lg w-full focus:border-[#864FD9] border border-[#D3D8DE] px-4 py-3 text-[#6E7B91] focus:shadow-md shadow-indigo-500/40 focus:outline-none' onChange={handleUserInput} name='password' value={formData.password} placeholder='password' type={`${showPassowrd ? 'password' : 'text'}`} />
+            <input className='rounded-lg w-full font-[500] focus:border-[#864FD9] border border-[#D3D8DE] px-4 py-3 text-[#6E7B91] focus:shadow-md shadow-indigo-500/40 focus:outline-none' onChange={handleUserInput} name='password' value={formData.password} placeholder='password' type={`${showPassowrd ? 'password' : 'text'}`} />
             <i className={`fa absolute -ml-6 mt-4 text-[#303C4F] cursor-pointer z-10 ${showPassowrd ? 'fa-eye' : 'fa-eye-slash'}`} onClick={() => setShowPassword(!showPassowrd)}></i>
           </div>
           <div className='mt-6  text-[#303C4F]'>
-            <input type="checkbox" name='terms' className='mr-2' onChange={handleUserInput} /><span>I agree to the <span className='cursor-pointer text-[#ff6b57]'>Terms & Priavcy</span></span>
+            <input type="checkbox" name='terms' className='mr-2' onChange={handleUserInput} /><span className='font-[500]'>I agree to the <span className='cursor-pointer text-[#ff6b57]'>Terms & Priavcy</span></span>
           </div>
-          <button className='bg-[#6823D0] text-center px-4 py-3 text-white rounded-lg w-full mt-6' onClick={signUp}>Create</button>
+          <button className='bg-[#6823D0] text-center px-4 py-3 text-white rounded-lg w-full mt-6 font-[500]' onClick={signUp}>Create</button>
         </div>
 
         <div className='text-center justify-center mt-2'>
-          <span className='text-[#6E7B91] font-bold'>Already have an account?</span>
-          <span className='text-[#864FD9] ml-2 cursor-pointer font-bold' onClick={() => goSignIn()}>Log in</span>
+          <span className='text-[#303C4F] font-[500]'>Already have an account?</span>
+          <span className='text-[#6823D0] ml-2 cursor-pointer font-[500]' onClick={() => goSignIn()}>Log in</span>
         </div>
       </div>
     </div>

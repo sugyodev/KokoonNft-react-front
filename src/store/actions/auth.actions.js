@@ -22,6 +22,7 @@ export const setWalletConnectionStatus = (connected) => dispatch => {
     })
 }
 
+
 // Modal Actions
 export const setOpenNftCreateModal = (isopen) => dispatch => {
     dispatch({
@@ -58,10 +59,19 @@ export const setShareNftCreatedModal = (modal) => dispatch => {
     })
 }
 
-//auth
+// Auth
 export const setSendEmailStatus = (data) => dispatch => {
     dispatch({
         type: types.SET_SEND_EMAIL_STATUS,
         payload: data
+    })
+}
+
+
+//Create NFt
+export const setNftType = (type) => dispatch => {
+    dispatch({
+        type: types.SET_NFT_TYPE,
+        payload: type
     })
 }

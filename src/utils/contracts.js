@@ -1,7 +1,7 @@
 import '@ethersproject/shims';
 import { BigNumber, ethers } from 'ethers';
 import { toast } from 'react-toastify';
-import { getContractInfo, getContractObj } from '.';
+import { getCollectionContract, getContractInfo, getContractObj } from '.';
 
 export function isAddress(address) {
   try {
@@ -104,9 +104,11 @@ export async function getTokenId(isMulti, collection, chainId, provider){
 
 // Add item to SKocoonNFT collection contract
 export async function addSingleItem(collection, uri, royalty, chainId, provider) {
+  console.log(collection, uri, royalty, chainId, provider);
   const contractObj = getCollectionContract('SKocoonNFT', collection, chainId, provider);
   if (!contractObj) return false
   try {
+    console.log(contractObj);
     const tx = await contractObj.purchaseItem(uri, royalty);
     const receipt = await tx.wait(1);
     if (receipt.confirmations) {
@@ -120,6 +122,7 @@ export async function addSingleItem(collection, uri, royalty, chainId, provider)
 }
 // Add item to MKocoonNFT collection contract
 export async function addMultiItem(collection, uri, royalty, supply, chainId, provider) {
+  console.log(collection, uri, royalty, supply, chainId, provider)
   const contractObj = getCollectionContract('MKocoonNFT', collection, chainId, provider);
   if (!contractObj) return false
   try {
@@ -208,12 +211,18 @@ export async function onAcceptTransaction(chainId, provider, transaction, buySig
 /**
 * Collection Contract Management
 */
-export async function createNewCollection(from, chainId, provider) {
-  const factoryContract = getContractObj(from, chainId, provider);
-  const factoryContractInfo = getContractInfo(from, chainId);
+
+/**
+ * deployCollection(nftType, chainId, provider)
+ * nftType: the value that identifies ERC721 or ERC1155 NFT Collection
+ *          0 : ERC721, 1: ERC1155
+ */ 
+export async function deployCollection(nftType, chainId, provider) {
+  const factoryContract = getContractObj("KocoonNFTFactory", chainId, provider);
+  const factoryContractInfo = getContractInfo("KocoonNFTFactory", chainId);
   try {
-    const tx = await factoryContract.createCollection();
-    const receipt = await tx.wait(2);
+    const tx = await factoryContract.deployCol(nftType);
+    const receipt = await tx.wait(1);
     if (receipt.confirmations) {
       const interf = new ethers.utils.Interface(factoryContractInfo.abi);
       const logs = receipt.logs;
@@ -221,13 +230,14 @@ export async function createNewCollection(from, chainId, provider) {
       for (let index = 0; index < logs.length; index++) {
         const log = logs[index];
         if (factoryContractInfo.address?.toLowerCase() === log.address?.toLowerCase()) {
-          collectionAddress = interf.parseLog(log).args.collection_address?.toLowerCase();
+          collectionAddress = interf.parseLog(log).args._colAddress?.toLowerCase();
           return collectionAddress;
         }
       }
     }
     return false;
   } catch (e) {
+    console.log(e);
     toast.error(JSON.parse(JSON.stringify(e))["reason"]);
     return false;
   }

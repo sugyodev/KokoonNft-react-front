@@ -12,3 +12,7 @@ export const SET_WALLET_CONNECTION_STATUS = "UPDATE_USER_BALANCE";
 
 //auth
 export const SET_SEND_EMAIL_STATUS = "SET_SEND_EMAIL_STATUS";
+
+//Create Nft
+export const SET_NFT_TYPE = "SET_NFT_TYPE";
+

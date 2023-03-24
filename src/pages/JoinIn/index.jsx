@@ -11,9 +11,11 @@ function JoinIn() {
 
   const joinIn = () => {
     navigate('/payment-page')
-
   }
 
+  /**
+   * Disconnect Wallet
+   */
   const disconnect = async () => {
     try {
       await web3Modal.providerController.clearCachedProvider();
@@ -28,10 +30,10 @@ function JoinIn() {
   return (
     <div className="signup h-screen">
       <div className='py-5 px-32 w-full h-18 border-b'>
-        <img src='imgs/logo.png' alt="A" />
+        <img src='/imgs/logo.png' alt="A" />
       </div>
       <div className='w-[370px] m-auto mt-20'>
-        <h1 className='w-full text-center font-bold text-2xl text-[#000549]'>Join Kocoon</h1>
+        <h1 className='w-full text-center font-semibold text-2xl text-[#000549]'>Join Kocoon</h1>
         <p className='my-2 text-sm text-center text-[#303C4F]'>Get started with Koccon by creating your profile</p>
         <div className='mt-10'>
           <p className='text-[#303C4F] text-sm my-2 px-1'>Display Name</p>
